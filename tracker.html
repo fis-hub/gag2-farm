@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAG2 Live Farm Monitor</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  
+  * { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  
+  :root {
+    --bg: #05050a;
+    --glow-violet: rgba(124, 58, 237, 0.08);
+    --surface: rgba(18, 18, 29, 0.6);
+    --card: rgba(30, 30, 46, 0.45);
+    --border: rgba(255, 255, 255, 0.07);
+    --border-hover: rgba(124, 58, 237, 0.3);
+    
+    --text: #f3f4f6;
+    --dim: #9ca3af;
+    
+    --green: #10b981;
+    --green-glow: rgba(16, 185, 129, 0.15);
+    --blue: #3b82f6;
+    --blue-glow: rgba(59, 130, 246, 0.15);
+    --amber: #f59e0b;
+    --amber-glow: rgba(245, 158, 11, 0.15);
+    --purple: #8b5cf6;
+    --purple-glow: rgba(139, 92, 246, 0.15);
+    --pink: #ec4899;
+    --red: #ef4444;
+  }
+
+  body {
+    background: var(--bg);
+    background-image: 
+      radial-gradient(circle at 10% 20%, var(--glow-violet) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, var(--glow-violet) 0%, transparent 40%);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 50px;
+    overflow-x: hidden;
+  }
+
+  /* Header Design */
+  .header {
+    padding: 16px 24px;
+    background: rgba(10, 10, 18, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .header h1 {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(to right, #ffffff, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header h1 span {
+    filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
+  }
+  
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--dim);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 6px 14px;
+    border-radius: 30px;
+    border: 1px solid var(--border);
+  }
+  
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(0.9); opacity: 0.4; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.4; }
+  }
+
+  /* Totals Grid */
+  .totals {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 24px 24px 16px;
+  }
+  @media(min-width: 768px) {
+    .totals {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+  }
+  
+  .total-card {
+    background: var(--surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: transform 0.2s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .total-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  
+  .total-card .label { 
+    font-size: 10px; 
+    color: var(--dim); 
+    font-weight: 700;
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+  }
+  .total-card .value { 
+    font-size: 24px; 
+    font-weight: 800; 
+    margin-top: 6px; 
+    letter-spacing: -0.5px;
+  }
+  
+  .total-card .value.money { color: var(--green); text-shadow: 0 0 20px var(--green-glow); }
+  .total-card .value.accs { color: var(--blue); text-shadow: 0 0 20px var(--blue-glow); }
+  .total-card .value.seeds { color: var(--amber); text-shadow: 0 0 20px var(--amber-glow); }
+  .total-card .value.items { color: var(--purple); text-shadow: 0 0 20px var(--purple-glow); }
+
+  /* Accounts Cards */
+  .accounts {
+    padding: 8px 24px 24px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media(min-width: 768px) {
+    .accounts {
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+  }
+
+  .account-card {
+    background: var(--surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    animation: fadeIn 0.4s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .account-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(124, 58, 237, 0.06);
+  }
+  
+  .acc-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+  }
+  .acc-name { font-weight: 700; font-size: 14px; letter-spacing: -0.2px; }
+  .acc-time { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+  .status-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 30px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-badge.online { background: rgba(16, 185, 129, 0.1); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.2); }
+  .status-badge.offline { background: rgba(156, 163, 175, 0.05); color: var(--dim); border: 1px solid rgba(156, 163, 175, 0.1); }
+
+  .acc-body { 
+    padding: 16px 18px; 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+  }
+  
+  .acc-stats {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+  
+  .acc-stat {
+    text-align: center;
+    flex: 1;
+  }
+  .acc-stat:first-child { 
+    border-right: 1px solid var(--border); 
+  }
+  
+  .acc-stat .s-label { 
+    font-size: 9px; 
+    color: var(--dim); 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+  }
+  .acc-stat .s-val { 
+    font-size: 16px; 
+    font-weight: 700; 
+    margin-top: 4px; 
+  }
+
+  /* Inventory Accordion */
+  .acc-details { 
+    font-size: 12px; 
+    color: var(--dim); 
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  }
+  
+  .acc-details summary { 
+    padding: 10px 12px;
+    cursor: pointer; 
+    color: var(--text); 
+    font-weight: 600; 
+    outline: none; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+    user-select: none;
+  }
+  .acc-details summary:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  
+  /* Custom Arrow animation for details */
+  .acc-details summary::after {
+    content: '→';
+    font-size: 11px;
+    color: var(--dim);
+    transition: transform 0.2s;
+  }
+  .acc-details[open] summary::after {
+    transform: rotate(90deg);
+    color: var(--purple);
+  }
+
+  .items-container {
+    max-height: 150px; 
+    overflow-y: auto; 
+    padding: 8px 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .acc-detail-row { 
+    display: flex; 
+    justify-content: space-between; 
+    padding: 6px 0; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03); 
+    font-size: 11px;
+    color: #d1d5db;
+  }
+  .acc-detail-row:last-child { border: none; }
+
+  /* Custom Scrollbar for Inventory */
+  .items-container::-webkit-scrollbar {
+    width: 4px;
+  }
+  .items-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .items-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
+  .items-container::-webkit-scrollbar-thumb:hover {
+    background: var(--dim);
+  }
+
+  .empty {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--dim);
+    background: var(--surface);
+    margin: 24px;
+    border-radius: 14px;
+    border: 1px dashed var(--border);
+  }
+  .empty h2 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
+  .empty p { font-size: 13px; line-height: 1.6; max-width: 380px; margin: 0 auto; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1><span>🌱</span> GAG2 Live Monitor</h1>
+    <div class="status-indicator">
+      <div class="dot"></div>
+      <span id="update-timer">Connecting...</span>
+    </div>
+  </div>
+
+  <div class="totals" id="totals">
+    <div class="total-card"><div class="label">Farms</div><div class="value accs">0</div></div>
+    <div class="total-card"><div class="label">Total Coins</div><div class="value money">0¢</div></div>
+    <div class="total-card"><div class="label">Total Seeds</div><div class="value seeds">0</div></div>
+    <div class="total-card"><div class="label">Total Items</div><div class="value items">0</div></div>
+  </div>
+
+  <div class="accounts" id="accounts"></div>
+  <div class="empty" id="empty">
+    <h2>No active farm feeds</h2>
+    <p>Ensure the Wave AutoExecute script is running in your Roblox client(s).</p>
+  </div>
+
+<script>
+// Query string auth to bypass iOS Safari local file CORS restrictions
+const BUCKET_URL = "https://kvdb.io/QRvmcZ4jDC9yHHcuJsVPxS/?values=true&format=json&access_token=jj3gXQ4iQSYJYwQ";
+
+const expandedStates = {};
+
+document.addEventListener('toggle', (e) => {
+  if (e.target.tagName === 'DETAILS') {
+    const card = e.target.closest('.account-card');
+    if (card) {
+      const username = card.dataset.username;
+      if (username) {
+        expandedStates[username] = e.target.open;
+      }
+    }
+  }
+}, true);
+
+function parseShortHand(str) {
+  if (typeof str !== 'string') return 0;
+  let clean = str.replace(/[^\d.KkMmBbTtsS]/g, '').trim().toLowerCase();
+  
+  let multiplier = 1;
+  if (clean.endsWith('k')) {
+    multiplier = 1e3;
+    clean = clean.slice(0, -1);
+  } else if (clean.endsWith('m')) {
+    multiplier = 1e6;
+    clean = clean.slice(0, -1);
+  } else if (clean.endsWith('b')) {
+    multiplier = 1e9;
+    clean = clean.slice(0, -1);
+  } else if (clean.endsWith('t')) {
+    multiplier = 1e12;
+    clean = clean.slice(0, -1);
+  }
+  
+  let val = parseFloat(clean) || 0;
+  return val * multiplier;
+}
+
+function formatNum(n) {
+  if (typeof n !== 'number') return n;
+  if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return n.toLocaleString();
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor(Date.now()/1000) - ts;
+  if (diff < 30) return 'Just now';
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  return Math.floor(diff/3600) + 'h ago';
+}
+
+async function fetchAndUpdate() {
+  try {
+    const res = await fetch(BUCKET_URL);
+    if (!res.ok) throw new Error("Fetch failed");
+    const data = await res.json();
+    
+    const accounts = {};
+    data.forEach(([username, value]) => {
+      try {
+        accounts[username] = typeof value === 'string' ? JSON.parse(value) : value;
+      } catch(e) {}
+    });
+
+    render(accounts);
+    document.getElementById('update-timer').innerText = "Live Connected";
+  } catch (err) {
+    document.getElementById('update-timer').innerText = "Reconnecting...";
+    console.error(err);
+  }
+}
+
+function render(accounts) {
+  const keys = Object.keys(accounts);
+  document.getElementById('empty').style.display = keys.length ? 'none' : 'block';
+  
+  let totalCoins = 0;
+  let totalSeeds = 0;
+  let totalItemsCount = 0;
+  
+  const now = Math.floor(Date.now() / 1000);
+  
+  const cardsHtml = keys.map(k => {
+    const a = accounts[k];
+    const coinsStr = a.c || "0¢";
+    const coinsVal = parseShortHand(coinsStr);
+    totalCoins += coinsVal;
+
+    const backpack = a.b || [];
+    totalItemsCount += backpack.length;
+    
+    let seedsCount = 0;
+    backpack.forEach(item => {
+      const itemName = typeof item === 'string' ? item : item.name || '';
+      if (itemName.toLowerCase().includes('seed')) {
+        const match = itemName.match(/\[(\d+)\]/);
+        if (match) {
+          seedsCount += parseInt(match[1]) || 1;
+        } else {
+          seedsCount += 1;
+        }
+      }
+    });
+    totalSeeds += seedsCount;
+
+    const timestamp = a.t || now;
+    const isOnline = (now - timestamp) < 45;
+
+    let itemRows = backpack.map(item => `
+      <div class="acc-detail-row">
+        <span>${item}</span>
+      </div>
+    `).join('');
+
+    if (backpack.length === 0) {
+      itemRows = `<div class="acc-detail-row" style="color:var(--dim); text-align:center;">Empty Backpack</div>`;
+    }
+
+    const displayName = a.d || a.username || k;
+    const username = a.u || k;
+    const isExpanded = expandedStates[username] || false;
+
+    return `
+      <div class="account-card" data-username="${username}">
+        <div class="acc-header">
+          <div>
+            <div class="acc-name">${displayName}</div>
+            <div class="acc-time">@${username} · ${timeAgo(timestamp)}</div>
+          </div>
+          <span class="status-badge ${isOnline ? 'online' : 'offline'}">${isOnline ? 'Online' : 'Offline'}</span>
+        </div>
+        <div class="acc-body">
+          <div class="acc-stats">
+            <div class="acc-stat">
+              <div class="s-label">Coins</div>
+              <div class="s-val" style="color:var(--green)">${coinsStr}</div>
+            </div>
+            <div class="acc-stat">
+              <div class="s-label">Total Seeds</div>
+              <div class="s-val" style="color:var(--amber)">${seedsCount}</div>
+            </div>
+          </div>
+          <details class="acc-details" ${isExpanded ? 'open' : ''}>
+            <summary>Inventory Items (${backpack.length})</summary>
+            <div class="items-container">
+              ${itemRows}
+            </div>
+          </details>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('totals').innerHTML = `
+    <div class="total-card"><div class="label">Farms</div><div class="value accs">${keys.length}</div></div>
+    <div class="total-card"><div class="label">Total Coins</div><div class="value money">${formatNum(totalCoins)}¢</div></div>
+    <div class="total-card"><div class="label">Total Seeds</div><div class="value seeds">${formatNum(totalSeeds)}</div></div>
+    <div class="total-card"><div class="label">Total Items</div><div class="value items">${formatNum(totalItemsCount)}</div></div>
+  `;
+  
+  document.getElementById('accounts').innerHTML = cardsHtml;
+}
+
+// Initial fetch and loop every 5 seconds
+fetchAndUpdate();
+setInterval(fetchAndUpdate, 5000);
+</script>
+</body>
+</html>
