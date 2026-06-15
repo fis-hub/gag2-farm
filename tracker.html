@@ -48,6 +48,101 @@
     overflow-x: hidden;
   }
 
+  /* Screens */
+  .screen {
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+  }
+  .screen.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Login Screen Design */
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 24px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+  .login-card h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(to right, #ffffff, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .login-card p {
+    font-size: 13px;
+    color: var(--dim);
+    margin-bottom: 24px;
+  }
+  .form-group {
+    text-align: left;
+    margin-bottom: 16px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .form-group input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-group input:focus {
+    border-color: var(--purple);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.25);
+  }
+  .btn-submit {
+    width: 100%;
+    background: linear-gradient(135deg, var(--purple), #6366f1);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .btn-submit:hover {
+    opacity: 0.9;
+  }
+  .btn-submit:active {
+    transform: scale(0.98);
+  }
+
   /* Header Design */
   .header {
     padding: 16px 24px;
@@ -78,6 +173,12 @@
     filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
   }
   
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
   .status-indicator {
     display: flex;
     align-items: center;
@@ -104,6 +205,23 @@
     0% { transform: scale(0.9); opacity: 0.4; }
     50% { transform: scale(1.1); opacity: 1; }
     100% { transform: scale(0.9); opacity: 0.4; }
+  }
+
+  .btn-disconnect {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-disconnect:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: rgba(239, 68, 68, 0.05);
   }
 
   /* Totals Grid */
@@ -180,11 +298,6 @@
     flex-direction: column;
     transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
     animation: fadeIn 0.4s ease-out;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
   }
 
   .account-card:hover {
@@ -279,7 +392,6 @@
     background: rgba(255, 255, 255, 0.02);
   }
   
-  /* Custom Arrow animation for details */
   .acc-details summary::after {
     content: '→';
     font-size: 11px;
@@ -308,7 +420,6 @@
   }
   .acc-detail-row:last-child { border: none; }
 
-  /* Custom Scrollbar for Inventory */
   .items-container::-webkit-scrollbar {
     width: 4px;
   }
@@ -337,33 +448,64 @@
 </style>
 </head>
 <body>
-  <div class="header">
-    <h1><span>🌱</span> GAG2 Live Monitor</h1>
-    <div class="status-indicator">
-      <div class="dot"></div>
-      <span id="update-timer">Connecting...</span>
+
+  <!-- Screen 1: Secure Login Form -->
+  <div id="screen-login" class="screen active">
+    <div class="login-container">
+      <div class="login-card">
+        <h2>🔒 Secure Connection</h2>
+        <p>Enter your database details to view your live farm monitor</p>
+        
+        <div class="form-group">
+          <label for="input-bucket">Bucket ID</label>
+          <input type="text" id="input-bucket" placeholder="e.g. QRvmcZ4jDC9yHHcuJsVPxS">
+        </div>
+        
+        <div class="form-group">
+          <label for="input-token">Access Token</label>
+          <input type="password" id="input-token" placeholder="e.g. jj3gXQ4iQSYJYwQ">
+        </div>
+        
+        <button class="btn-submit" onclick="connectDatabase()">Connect Dashboard</button>
+      </div>
     </div>
   </div>
 
-  <div class="totals" id="totals">
-    <div class="total-card"><div class="label">Farms</div><div class="value accs">0</div></div>
-    <div class="total-card"><div class="label">Total Coins</div><div class="value money">0¢</div></div>
-    <div class="total-card"><div class="label">Total Seeds</div><div class="value seeds">0</div></div>
-    <div class="total-card"><div class="label">Total Items</div><div class="value items">0</div></div>
-  </div>
+  <!-- Screen 2: Farm Dashboard -->
+  <div id="screen-dashboard" class="screen">
+    <div class="header">
+      <h1><span>🌱</span> GAG2 Live Monitor</h1>
+      <div class="header-right">
+        <div class="status-indicator">
+          <div class="dot"></div>
+          <span id="update-timer">Connecting...</span>
+        </div>
+        <button class="btn-disconnect" onclick="disconnectDatabase()">Sign Out</button>
+      </div>
+    </div>
 
-  <div class="accounts" id="accounts"></div>
-  <div class="empty" id="empty">
-    <h2>No active farm feeds</h2>
-    <p>Ensure the Wave AutoExecute script is running in your Roblox client(s).</p>
+    <div class="totals" id="totals">
+      <div class="total-card"><div class="label">Farms</div><div class="value accs">0</div></div>
+      <div class="total-card"><div class="label">Total Coins</div><div class="value money">0¢</div></div>
+      <div class="total-card"><div class="label">Total Seeds</div><div class="value seeds">0</div></div>
+      <div class="total-card"><div class="label">Total Items</div><div class="value items">0</div></div>
+    </div>
+
+    <div class="accounts" id="accounts"></div>
+    <div class="empty" id="empty">
+      <h2>No active farm feeds</h2>
+      <p>Ensure the Wave AutoExecute script is running in your Roblox client(s).</p>
+    </div>
   </div>
 
 <script>
-// Query string auth to bypass iOS Safari local file CORS restrictions
-const BUCKET_URL = "https://kvdb.io/QRvmcZ4jDC9yHHcuJsVPxS/?values=true&format=json&access_token=jj3gXQ4iQSYJYwQ";
-
+// State Variables
+let BUCKET_ID = "";
+let ACCESS_TOKEN = "";
+let updateInterval = null;
 const expandedStates = {};
 
+// Event delegation for accordion toggles
 document.addEventListener('toggle', (e) => {
   if (e.target.tagName === 'DETAILS') {
     const card = e.target.closest('.account-card');
@@ -375,6 +517,63 @@ document.addEventListener('toggle', (e) => {
     }
   }
 }, true);
+
+// Check if already authenticated on load
+window.addEventListener('DOMContentLoaded', () => {
+  const savedBucket = localStorage.getItem('kvdb_bucket');
+  const savedToken = localStorage.getItem('kvdb_token');
+  
+  if (savedBucket && savedToken) {
+    BUCKET_ID = savedBucket;
+    ACCESS_TOKEN = savedToken;
+    showDashboard();
+  }
+});
+
+// Login button function
+function connectDatabase() {
+  const bucketInput = document.getElementById('input-bucket').value.trim();
+  const tokenInput = document.getElementById('input-token').value.trim();
+  
+  if (!bucketInput || !tokenInput) {
+    alert("Please fill in both fields!");
+    return;
+  }
+  
+  BUCKET_ID = bucketInput;
+  ACCESS_TOKEN = tokenInput;
+  
+  // Save credentials securely in browser local storage
+  localStorage.setItem('kvdb_bucket', BUCKET_ID);
+  localStorage.setItem('kvdb_token', ACCESS_TOKEN);
+  
+  showDashboard();
+}
+
+// Disconnect button function
+function disconnectDatabase() {
+  if (confirm("Disconnect and clear credentials from this device?")) {
+    localStorage.removeItem('kvdb_bucket');
+    localStorage.removeItem('kvdb_token');
+    
+    // Reset state & return to login screen
+    if (updateInterval) clearInterval(updateInterval);
+    document.getElementById('screen-dashboard').classList.remove('active');
+    document.getElementById('screen-login').classList.add('active');
+    document.getElementById('input-bucket').value = "";
+    document.getElementById('input-token').value = "";
+  }
+}
+
+// Show dashboard screen and start the loop
+function showDashboard() {
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-dashboard').classList.add('active');
+  
+  // Initial fetch and start loop
+  fetchAndUpdate();
+  updateInterval = setInterval(fetchAndUpdate, 5000);
+}
 
 function parseShortHand(str) {
   if (typeof str !== 'string') return 0;
@@ -417,7 +616,8 @@ function timeAgo(ts) {
 
 async function fetchAndUpdate() {
   try {
-    const res = await fetch(BUCKET_URL);
+    const url = `https://kvdb.io/${BUCKET_ID}/?values=true&format=json&access_token=${ACCESS_TOKEN}`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error("Fetch failed");
     const data = await res.json();
     
@@ -526,10 +726,6 @@ function render(accounts) {
   
   document.getElementById('accounts').innerHTML = cardsHtml;
 }
-
-// Initial fetch and loop every 5 seconds
-fetchAndUpdate();
-setInterval(fetchAndUpdate, 5000);
 </script>
 </body>
 </html>
